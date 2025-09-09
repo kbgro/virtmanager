@@ -1,0 +1,8 @@
+{
+  "name": "Virt Manager",
+  "description": "Manage Libvirt Virtual machines",
+  "uuid": "virtmanager@kbgro.com",
+  "shell-version": [
+    "48"
+  ]
+}
