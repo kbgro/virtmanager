@@ -2,6 +2,7 @@ import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 import Clutter from "gi://Clutter";
 import St from "gi://St";
+import Vms from "./vms.js";
 
 import {
   Extension,
@@ -29,17 +30,15 @@ function createIcon(iconName, symbolic = false, size = 16) {
   return ico;
 }
 
-function createPopupItem(labelName) {
+function createPopupItem(vm) {
   let item = new PopupMenu.PopupBaseMenuItem();
 
-  let leftIcon = createIcon("win.svg");
-  let leftIconActive = createIcon("win.svg");
-
+  let leftIcon = createIcon(vm.icon);
   item.add_child(leftIcon);
 
   item.add_child(
     new St.Label({
-      text: labelName,
+      text: vm.name,
       x_expand: true,
       x_align: Clutter.ActorAlign.START,
     }),
@@ -47,17 +46,17 @@ function createPopupItem(labelName) {
 
   let power = new St.Button({
     child: createIcon("system-shutdown-symbolic", true, 20),
-    style_class: "virt-button",
+    style_class: vm.state === "running" ? "virt-button-active" : "virt-button",
     x_align: Clutter.ActorAlign.END,
   });
   item.add_child(power);
   power.connect("clicked", () => {
     if (power.style_class === "virt-button") {
       power.style_class = "virt-button-active";
-      leftIcon.gicon = getIconPath("win-active.svg");
+      leftIcon.gicon = getIconPath(vm.activeIcon);
     } else {
       power.style_class = "virt-button";
-      leftIcon.gicon = getIconPath("win.svg");
+      leftIcon.gicon = getIconPath(vm.icon);
     }
   });
 
@@ -69,8 +68,30 @@ const Indicator = GObject.registerClass(
     _init() {
       super._init(0.0, _("VirtMan"));
 
-      this.add_child(createIcon("virtlogo.png"));
-      this.menu.addMenuItem(createPopupItem("Win10"));
+      this.add_child(createIcon("virtlogo.svg"));
+      this.load();
+
+      this.menu.connect("open-state-changed", (_, isOpen) => {
+        console.log("hehre.........");
+        if (isOpen) {
+          this.load();
+        }
+      });
+    }
+
+    async load() {
+      try {
+        this.menu.removeAll();
+
+        const domains = await Vms.listDomains();
+        domains.forEach((vm) => {
+          vm.icon = `${vm.type}.svg`;
+          vm.activeIcon = `${vm.type}-active.svg`;
+          this.menu.addMenuItem(createPopupItem(vm));
+        });
+      } catch (error) {
+        console.error("load:", error);
+      }
     }
   },
 );
