@@ -1,5 +1,23 @@
 const GLib = imports.gi.GLib;
 
+function startDomain(domain) {
+  return new Promise((resolve, reject) => {
+    let [success, stdout, stderr, status] = GLib.spawn_command_line_sync(
+      `/usr/bin/virsh --connect qemu:///system start ${domain}`,
+    );
+
+    if (!success) {
+      reject("oops");
+      return;
+    }
+
+    const outputStr = imports.byteArray.toString(stdout);
+    const errputStr = imports.byteArray.toString(stderr);
+
+    resolve(result);
+  });
+}
+
 function getVMListAsync() {
   return new Promise((resolve, reject) => {
     let [success, stdout, stderr, status] = GLib.spawn_command_line_sync(
@@ -36,7 +54,7 @@ export async function listDomains() {
       vm.type = "win";
     } else {
       vm.type = "generic";
-        }
+    }
     return vm;
   });
 }
@@ -46,4 +64,4 @@ export async function getDomain(domain) {
   return domains.find((d) => d.name === domain);
 }
 
-export default { listDomains, getDomain };
+export default { listDomains, getDomain, startDomain };

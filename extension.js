@@ -30,10 +30,10 @@ function createIcon(iconName, symbolic = false, size = 16) {
   return ico;
 }
 
-function createPopupItem(vm) {
+function createPopupItem(vm, sync) {
   let item = new PopupMenu.PopupBaseMenuItem();
 
-  let leftIcon = createIcon(vm.icon);
+  let leftIcon = createIcon(vm.running ? vm.activeIcon : vm.icon);
   item.add_child(leftIcon);
 
   item.add_child(
@@ -51,13 +51,8 @@ function createPopupItem(vm) {
   });
   item.add_child(power);
   power.connect("clicked", () => {
-    if (power.style_class === "virt-button") {
-      power.style_class = "virt-button-active";
-      leftIcon.gicon = getIconPath(vm.activeIcon);
-    } else {
-      power.style_class = "virt-button";
-      leftIcon.gicon = getIconPath(vm.icon);
-    }
+    Vms.startDomain(vm.name);
+    if (sync) sync();
   });
 
   return item;
@@ -72,7 +67,6 @@ const Indicator = GObject.registerClass(
       this.load();
 
       this.menu.connect("open-state-changed", (_, isOpen) => {
-        console.log("hehre.........");
         if (isOpen) {
           this.load();
         }
@@ -87,7 +81,8 @@ const Indicator = GObject.registerClass(
         domains.forEach((vm) => {
           vm.icon = `${vm.type}.svg`;
           vm.activeIcon = `${vm.type}-active.svg`;
-          this.menu.addMenuItem(createPopupItem(vm));
+          vm.running = vm.state == "running";
+          this.menu.addMenuItem(createPopupItem(vm, this.load));
         });
       } catch (error) {
         console.error("load:", error);
