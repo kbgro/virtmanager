@@ -2,3 +2,7 @@
 .virt-button-active {
     color: red;
 }
+
+.virt-screen {
+    padding: 0 8px;
+}

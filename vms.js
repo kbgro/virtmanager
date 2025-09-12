@@ -1,5 +1,15 @@
 const GLib = imports.gi.GLib;
 
+function viewDomain(domain) {
+  return new Promise((resolve, reject) => {
+    GLib.spawn_command_line_async(
+      `/usr/bin/virt-manager -c qemu:///system --show-domain-console ${domain}`,
+    );
+
+    resolve(true);
+  });
+}
+
 function startDomain(domain) {
   return new Promise((resolve, reject) => {
     let [success, stdout, stderr, status] = GLib.spawn_command_line_sync(
@@ -11,8 +21,8 @@ function startDomain(domain) {
       return;
     }
 
-    const outputStr = imports.byteArray.toString(stdout);
-    const errputStr = imports.byteArray.toString(stderr);
+    // const outputStr = imports.byteArray.toString(stdout);
+    // const errputStr = imports.byteArray.toString(stderr);
 
     resolve(result);
   });
@@ -64,4 +74,4 @@ export async function getDomain(domain) {
   return domains.find((d) => d.name === domain);
 }
 
-export default { listDomains, getDomain, startDomain };
+export default { listDomains, getDomain, startDomain, viewDomain };

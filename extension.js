@@ -44,6 +44,18 @@ function createPopupItem(vm, sync) {
     }),
   );
 
+  let screen = new St.Button({
+    child: createIcon("computer-symbolic", true, 20),
+    style_class: "virt-screen",
+    x_align: Clutter.ActorAlign.END,
+  });
+  item.add_child(screen);
+  screen.connect("clicked", () => {
+    if (!vm.running) return;
+
+    Vms.viewDomain(vm.name);
+  });
+
   let power = new St.Button({
     child: createIcon("system-shutdown-symbolic", true, 20),
     style_class: vm.state === "running" ? "virt-button-active" : "virt-button",
@@ -51,6 +63,8 @@ function createPopupItem(vm, sync) {
   });
   item.add_child(power);
   power.connect("clicked", () => {
+    if (vm.running) return;
+
     Vms.startDomain(vm.name);
     if (sync) sync();
   });
@@ -82,7 +96,7 @@ const Indicator = GObject.registerClass(
           vm.icon = `${vm.type}.svg`;
           vm.activeIcon = `${vm.type}-active.svg`;
           vm.running = vm.state == "running";
-          this.menu.addMenuItem(createPopupItem(vm, this.load));
+          this.menu.addMenuItem(createPopupItem(vm, () => this.load()));
         });
       } catch (error) {
         console.error("load:", error);
